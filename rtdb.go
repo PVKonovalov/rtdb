@@ -87,6 +87,13 @@ func (c *Rtdb) IsPointChanged(key uint64, priority int, point Point) bool {
 	return false
 }
 
+// Put save point to rtdb
+func (c *Rtdb) Put(key uint64, point Point) {
+	c.Lock()
+	c.db[key] = point
+	c.Unlock()
+}
+
 // Get Point by key
 func (c *Rtdb) Get(key uint64) (Point, bool) {
 	c.RLock()
