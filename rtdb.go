@@ -18,6 +18,7 @@ type IsoDate struct {
 // Point value structure
 type Point struct {
 	Timestamp IsoDate
+	TimestampRecv IsoDate
 	Value     float32
 	Quality   uint32
 }
