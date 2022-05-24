@@ -11,16 +11,27 @@ import (
 	"time"
 )
 
+const (
+	PriorityValueQuality          = 1
+	PriorityValueQualityTimestamp = 2
+)
+
 type IsoDate struct {
 	time.Time
 }
 
 // Point value structure
 type Point struct {
-	Timestamp IsoDate
+	Timestamp     IsoDate
 	TimestampRecv IsoDate
-	Value     float32
-	Quality   uint32
+	Value         float32
+	Quality       uint32
+	HasFreshData  bool
+}
+
+// String ToString functionality
+func (c IsoDate) String() string {
+	return c.Time.Format("2006-01-02 15:04:05.999")
 }
 
 func (c *IsoDate) UnmarshalJSON(b []byte) (err error) {
@@ -55,34 +66,43 @@ func (c *Rtdb) IsPointChanged(key uint64, priority int, point Point) bool {
 	c.RLock()
 	if pointInDb, exist := c.db[key]; exist {
 		c.RUnlock()
+
 		switch priority {
-		case 1:
+		case PriorityValueQuality:
 			if point.Value != pointInDb.Value || point.Quality != pointInDb.Quality {
+
 				c.Lock()
 				c.db[key] = point
 				c.Unlock()
+
 				return true
 			}
-		case 2:
+		case PriorityValueQualityTimestamp:
 			if point.Value != pointInDb.Value || point.Quality != pointInDb.Quality || point.Timestamp != pointInDb.Timestamp {
+
 				c.Lock()
 				c.db[key] = point
 				c.Unlock()
+
 				return true
 			}
 		default:
 			if point.Value != pointInDb.Value {
+
 				c.Lock()
 				c.db[key] = point
 				c.Unlock()
+
 				return true
 			}
 		}
 	} else {
 		c.RUnlock()
+
 		c.Lock()
 		c.db[key] = point
 		c.Unlock()
+
 		return true
 	}
 	return false
@@ -101,4 +121,36 @@ func (c *Rtdb) Get(key uint64) (Point, bool) {
 	point, exist := c.db[key]
 	c.RUnlock()
 	return point, exist
+}
+
+// GetFresh Point by key
+func (c *Rtdb) GetFresh(key uint64) (Point, bool) {
+
+	c.RLock()
+	point, exist := c.db[key]
+	c.RUnlock()
+
+	if exist && point.HasFreshData {
+		point.HasFreshData = false
+
+		c.Lock()
+		c.db[key] = point
+		c.Unlock()
+
+		return point, true
+	}
+
+	return point, false
+}
+
+// GetCopy of Rtdb
+func (c *Rtdb) GetCopy() *map[uint64]Point {
+	db := make(map[uint64]Point)
+
+	for k, v := range c.db {
+		c.RLock()
+		db[k] = v
+		c.RUnlock()
+	}
+	return &db
 }
