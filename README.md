@@ -12,3 +12,27 @@ type Point struct {
 	HasFreshData  bool    // Flag indicating that the data has changed
 }
 ```
+## How to use
+```
+var Localdb *rtdb.Rtdb
+
+...
+
+Localdb = rtdb.NewRtdb()
+
+...
+
+Localdb.Put(point.Id, rtdb.Point{ 
+	Value:        point.Value,
+	Timestamp:    point.Timestamp,
+	Quality:      point.Quality,
+	HasFreshData: false,
+	})
+
+...
+
+if localDbPoint, exist := s.Localdb.GetFresh(pointId); exist {
+	...
+}
+
+```
