@@ -3,7 +3,7 @@ Simple goroutine-safe realtime (in memory) database for SCADA application
 
 Each point stored in RTDB has the following fields:
 
-```
+```Go
 type Point struct {
 	Timestamp     IsoDate // Timestamp from remote terminal unit (RTU) 
 	TimestampRecv IsoDate // Timestamp from SCADA
@@ -13,7 +13,7 @@ type Point struct {
 }
 ```
 ## How to use
-```
+```Go
 var Localdb *rtdb.Rtdb
 
 ...
