@@ -154,4 +154,3 @@ func (c *Rtdb) GetCopy() *map[uint64]Point {
 	}
 	return &db
 }
-
