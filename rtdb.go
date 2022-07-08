@@ -6,6 +6,7 @@
 package rtdb
 
 import (
+	"math"
 	"strings"
 	"sync"
 	"time"
@@ -62,7 +63,7 @@ func NewRtdb() *Rtdb {
 }
 
 // IsPointChanged checking if a point has been changed. It depends on priority
-func (c *Rtdb) IsPointChanged(key uint64, priority int, point Point) bool {
+func (c *Rtdb) IsPointChanged(key uint64, priority int, point Point, aperture float64) bool {
 	c.RLock()
 	if pointInDb, exist := c.db[key]; exist {
 		c.RUnlock()
@@ -87,7 +88,7 @@ func (c *Rtdb) IsPointChanged(key uint64, priority int, point Point) bool {
 				return true
 			}
 		default:
-			if point.Value != pointInDb.Value {
+			if math.Abs(float64(point.Value-pointInDb.Value)) > aperture {
 
 				c.Lock()
 				c.db[key] = point
