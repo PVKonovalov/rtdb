@@ -6,13 +6,13 @@
 package rtdb
 
 import (
-	"math"
 	"strings"
 	"sync"
 	"time"
 )
 
 const (
+	PriorityValue                 = 0
 	PriorityValueQuality          = 1
 	PriorityValueQualityTimestamp = 2
 )
@@ -27,7 +27,6 @@ type Point struct {
 	TimestampRecv IsoDate
 	Value         float32
 	Quality       uint32
-	HasFreshData  bool
 }
 
 // String ToString functionality
@@ -63,47 +62,38 @@ func NewRtdb() *Rtdb {
 }
 
 // IsPointChanged checking if a point has been changed. It depends on priority
-func (c *Rtdb) IsPointChanged(key uint64, priority int, point Point, aperture float64) bool {
+func (c *Rtdb) IsPointChanged(key uint64, priority int, point Point) bool {
 	c.RLock()
 	if pointInDb, exist := c.db[key]; exist {
 		c.RUnlock()
-
 		switch priority {
 		case PriorityValueQuality:
 			if point.Value != pointInDb.Value || point.Quality != pointInDb.Quality {
-
 				c.Lock()
 				c.db[key] = point
 				c.Unlock()
-
 				return true
 			}
 		case PriorityValueQualityTimestamp:
 			if point.Value != pointInDb.Value || point.Quality != pointInDb.Quality || point.Timestamp != pointInDb.Timestamp {
-
 				c.Lock()
 				c.db[key] = point
 				c.Unlock()
-
 				return true
 			}
 		default:
-			if math.Abs(float64(point.Value-pointInDb.Value)) > aperture {
-
+			if point.Value != pointInDb.Value {
 				c.Lock()
 				c.db[key] = point
 				c.Unlock()
-
 				return true
 			}
 		}
 	} else {
 		c.RUnlock()
-
 		c.Lock()
 		c.db[key] = point
 		c.Unlock()
-
 		return true
 	}
 	return false
@@ -124,27 +114,6 @@ func (c *Rtdb) Get(key uint64) (Point, bool) {
 	return point, exist
 }
 
-// GetFresh Point by key
-func (c *Rtdb) GetFresh(key uint64) (Point, bool) {
-
-	c.RLock()
-	point, exist := c.db[key]
-	c.RUnlock()
-
-	if exist && point.HasFreshData {
-		point.HasFreshData = false
-
-		c.Lock()
-		c.db[key] = point
-		c.Unlock()
-
-		return point, true
-	}
-
-	return point, false
-}
-
-// GetCopy of Rtdb
 func (c *Rtdb) GetCopy() *map[uint64]Point {
 	db := make(map[uint64]Point)
 
