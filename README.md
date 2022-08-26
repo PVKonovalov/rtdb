@@ -1,6 +1,8 @@
 # rtdb
 Simple goroutine-safe realtime (in memory) database for SCADA application
 
+![](RtdbInScada.png)
+
 Each point stored in RTDB has the following fields:
 
 ```Go
