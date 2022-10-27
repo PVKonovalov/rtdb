@@ -27,7 +27,7 @@ type Point struct {
 	TimestampRecv IsoDate
 	Value         float32
 	Quality       uint32
-	Source        int
+	Source        uint32
 }
 
 // String ToString functionality
